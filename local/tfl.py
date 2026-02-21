@@ -1,19 +1,12 @@
+from datetime import datetime
 import json
 import os
-import string
 from dataclasses import dataclass
+from zoneinfo import ZoneInfo
 
 import urllib3
+from pen import Colours, Pen
 from PIL import Image
-
-
-@dataclass(frozen=True)
-class Colours:
-    RED = (220, 36, 31)
-    WHITE = (255, 255, 255)
-    BLUE = (0, 25, 168)
-    YELLOW = (255, 211, 0)
-    GRAY = (20, 20, 20)
 
 
 @dataclass(frozen=True)
@@ -22,10 +15,6 @@ class Station:
     nickname: str
     code: str
     underground: bool
-
-    def __post_init__(self):
-        if len(self.nickname) > 10:
-            raise ValueError(f'Nickname "{self.nickname}" is too long (max 10 chars)')
 
 
 @dataclass(frozen=True)
@@ -42,6 +31,7 @@ class Stations:
     CLAPHAM_JUNCTION: Station = Station("910GCLPHMJ1", "clapham", "CLJ", False)
     RICHMOND: Station = Station("910GRICHMND", "richmond", "RMD", False)
     WILLESDEN_JUNCTION: Station = Station("910GWLSDJHL", "willesden", "WIJ", False)
+    KENSAL_RISE: Station = Station("910GKENR", "kensal rise", "KNR", False)
 
 
 DUPLICATE_IDS = {"910GCLPHMJC": "910GCLPHMJ1"}
@@ -67,20 +57,13 @@ class TFL:
     def __init__(self):
         self.pool_manager = urllib3.PoolManager()
         self.app_key = os.environ["TFL_APP_KEY"]
+        self.pen = Pen()
 
-        self.underground = Image.open("assets/underground.png")
-        self.overground = Image.open("assets/overground.png")
-        self.bank = Image.open("assets/bank.png")
-        self.cross = Image.open("assets/cross.png")
-        self.tube = Image.open("assets/tube.png")
-
-        self.glyphs = {letter: Image.open(f"assets/letters/{letter}.png") for letter in string.ascii_uppercase}
-        self.glyphs.update({str(number): Image.open(f"assets/numbers/{number}.png") for number in range(10)})
-        self.letter_height = self.glyphs["A"].height
-        self.number_height = self.glyphs["0"].height
-
-    def _text_width(self, text):
-        return sum(self.glyphs[char].width for char in text.upper()) + len(text) - 1
+        self.underground = Image.open("assets/tfl/underground.png")
+        self.overground = Image.open("assets/tfl/overground.png")
+        self.bank = Image.open("assets/tfl/bank.png")
+        self.cross = Image.open("assets/tfl/cross.png")
+        self.tube = Image.open("assets/tfl/tube.png")
 
     @staticmethod
     def _filter_arrivals(arrivals, station_id, inbound):
@@ -106,13 +89,20 @@ class TFL:
     def _draw_header(self, image, text, underground):
         roundel = self.underground if underground else self.overground
 
-        text_width = self._text_width(text)
-        x = int(32 - (text_width + roundel.width + 2) // 2)
-        image.paste(roundel, (x, 2), roundel)
-        self._draw_text(
+        image.paste(roundel, (1, 2), roundel)
+        self.pen.draw_text(
             image=image,
-            xy=(x + roundel.width + 2, 1),
+            xy=(roundel.width + 2, 1),
             text=text,
+            color=Colours.YELLOW,
+        )
+
+        time = datetime.now().strftime("%H:%M")
+        time_width = self.pen.text_width(time)
+        self.pen.draw_text(
+            image=image,
+            xy=(63 - time_width, 2),
+            text=time,
             color=Colours.YELLOW,
         )
 
@@ -121,17 +111,20 @@ class TFL:
 
         y += 10 + self.tube.height
         for text in ["Service", "Closed"]:
-            text_width = self._text_width(text,)
-            self._draw_text(
+            text_width = self.pen.text_width(
+                text,
+            )
+            self.pen.draw_text(
                 image=image,
                 xy=(32 - text_width // 2, y),
                 text=text,
                 color=Colours.YELLOW,
             )
-            y += self.letter_height + 1
+            y += self.pen.letter_height + 1
 
     def _get_arrivals(self, station_id):
         url = f"https://api.tfl.gov.uk/StopPoint/{station_id}/Arrivals?APP_KEY={self.app_key}"
+        print(url)
         try:
             response = self.pool_manager.request("GET", url, timeout=5.0)
 
@@ -145,15 +138,6 @@ class TFL:
             print(f"Request failed: {e}")
             return []
 
-    def _draw_text(self, image, xy, text, color):
-        x, y = xy
-        for char in text.upper():
-            glyph = self.glyphs[char]
-            background = Image.new("RGBA", glyph.size, color=color)
-            image.paste(background, (x, y), glyph)
-
-            x += glyph.width + 1
-
     def get_and_filter_arrivals(self, station_id: str, inbound: bool) -> list[dict]:
         arrivals = self._get_arrivals(station_id)
         arrivals = self._filter_arrivals(arrivals, station_id, inbound)
@@ -166,8 +150,8 @@ class TFL:
 
         self._draw_header(image, header_text, underground)
 
-        # height of the header + 3 spaces
-        y = self.letter_height + 3
+        # height of the header + 4 spaces
+        y = self.pen.letter_height + 4
         for arrival in arrivals:
             try:
                 nickname = ID_TO_STATION[arrival["destinationNaptanId"]].nickname
@@ -175,8 +159,8 @@ class TFL:
                 print(f"Arrival is not a listed station: {arrival}")
                 nickname = arrival["destinationName"].split()[0][:3]
             left_text = nickname.capitalize()
-            left_width = self._text_width(left_text)
-            self._draw_text(
+            left_width = self.pen.text_width(left_text)
+            self.pen.draw_text(
                 image=image,
                 xy=(1, y),
                 text=left_text,
@@ -188,21 +172,20 @@ class TFL:
             elif "via Bank" in arrival["towards"]:
                 image.paste(self.bank, (left_width + 2, y), self.bank)
 
-
             mins_to_station = str(arrival["timeToStation"] // 60)
-            text_width = self._text_width(mins_to_station)
-            self._draw_text(
+            text_width = self.pen.text_width(mins_to_station)
+            self.pen.draw_text(
                 image=image,
                 xy=(
                     63 - text_width,
-                    y + self.letter_height - self.number_height,
+                    y + self.pen.letter_height - self.pen.number_height,
                 ),
                 text=mins_to_station,
                 color=Colours.YELLOW,
             )
 
-            y += self.letter_height + 1
-            if y + self.letter_height >= 64:
+            y += self.pen.letter_height + 2
+            if y + self.pen.letter_height >= 64:
                 break
 
         if len(arrivals) == 0:
@@ -218,7 +201,7 @@ def main():
     image = tfl.make_image(
         arrivals, station.nickname.capitalize(), underground=station.underground
     )
-    image.save("debug.png")
+    image.save("../tfl.png")
 
 
 if __name__ == "__main__":

@@ -1,33 +1,30 @@
-import json
 import os
+from datetime import datetime, timezone
 
 import boto3
-from tfl import Stations
+from my_config import config
 
 sqs = boto3.client("sqs")
 
 
+def _filter_messages(messages):
+    filtered_messages = []
+
+    weekday = datetime.now(timezone.utc).weekday()
+    for message in messages:
+        if message.weekday is not None and message.weekday != weekday:
+            continue
+
+        filtered_messages.append(message)
+    return filtered_messages
+
+
 def lambda_handler(event, context):
-    for station_id, inbound, delay in [
-        [Stations.BELSIZE_PARK.station_id, True, 0],
-        [Stations.HAMPSTEAD_HEATH.station_id, False, 15],
-        [Stations.BELSIZE_PARK.station_id, True, 30],
-        [Stations.HAMPSTEAD_HEATH.station_id, False, 45],
-    ]:
-        body = {"station_id": station_id, "inbound": inbound}
+    messages = _filter_messages(config.messages)
+    for i in range(config.messages_per_minute):
         sqs.send_message(
             QueueUrl=os.environ["QUEUE_URL"],
-            MessageBody=json.dumps(body),
-            DelaySeconds=delay,
+            MessageBody=messages[i % len(messages)].to_message_body(),
+            DelaySeconds=int(60 * i / config.messages_per_minute),
         )
     return None
-
-
-def main():
-    event = None
-    context = None
-    lambda_handler(event, context)
-
-
-if __name__ == "__main__":
-    main()

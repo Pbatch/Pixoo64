@@ -1,6 +1,4 @@
-# Transport for London - Pixoo 64
-
-A Real-Time TfL Departures Board for Pixoo64
+# Pixoo64
 
 <table style="width: 100%;">
   <tr>
@@ -30,6 +28,10 @@ but the responses are more reliable with one.
 1) Request an API key from the TFL website (https://api-portal.tfl.gov.uk/signup). 
 2) Export the key with `export TFL_APP_KEY=<TFL_APP_KEY>`
 3) Test that the key is working by running `cd local && python tfl.py`. 
+
+### Parkrun API
+
+TODO
 
 ### Pixoo64 API
 The Pixoo64 has 2 APIs, 
