@@ -161,14 +161,14 @@ class MetOffice:
         y = self.pen.letter_height + 5
 
         for prefix, key in [
-            ["Temp", "screenTemperature"],
+            ["Outdoors", "screenTemperature"],
             ["Rain", "probOfPrecipitation"],
             ["Humidity", "screenRelativeHumidity"],
         ]:
             self.pen.draw_text(image, (1, y), prefix, color=Colours.YELLOW)
 
             text = str(int(weather[key]))
-            if prefix == "Temp":
+            if prefix == "Outdoors":
                 text += "°"
             if prefix == "Rain":
                 text += "%"
