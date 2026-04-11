@@ -31,6 +31,8 @@ class Stations:
     RICHMOND: Station = Station("910GRICHMND", "richmond", "RMD", False)
     WILLESDEN_JUNCTION: Station = Station("910GWLSDJHL", "willesden", "WIJ", False)
     KENSAL_RISE: Station = Station("910GKENR", "kensal rise", "KNR", False)
+    SOUTH_ACTON: Station = Station("910GSACTON", "south acton", "SAT", False)
+    SHEPHERDS_BUSH: Station = Station("910GSHPDSB", "sheps bush", "SPB", False)
 
 
 DUPLICATE_IDS = {"910GCLPHMJC": "910GCLPHMJ1"}
