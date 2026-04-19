@@ -150,7 +150,7 @@ class Weather:
             text = str(int(weather[key]))
             if key in {"pondTemperature", "screenTemperature"}:
                 text += "°"
-            if key == "probOfPrecipitation":
+            if key in {"probOfPrecipitation", "screenRelativeHumidity"}:
                 text += "%"
             text_width = self.pen.text_width(text)
             self.pen.draw_text(image, (x + (32 - text_width) // 2, y - self.pen.letter_height), text, Colours.YELLOW)

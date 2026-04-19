@@ -1,6 +1,7 @@
 import json
 import time
 
+from config import MessageMode
 from weather import Weather
 from parkrun import Parkrun
 from pixoo import Pixoo
@@ -19,7 +20,7 @@ def lambda_handler(event, context):
     body = json.loads(record["body"])
     mode = body["mode"]
 
-    if mode == "tfl":
+    if mode == MessageMode.TFL:
         station = ID_TO_STATION[body["station_id"]]
         inbound = body["inbound"]
 
@@ -28,10 +29,10 @@ def lambda_handler(event, context):
             header_text=station.nickname.capitalize(),
             underground=station.underground,
         )
-    elif mode == "parkrun":
+    elif mode == MessageMode.PARKRUN:
         id_to_name = body["id_to_name"]
         image = parkrun.make_image(id_to_name)
-    elif mode == "weather":
+    elif mode == MessageMode.WEATHER:
         lat = body["lat"]
         lon = body["lon"]
         image = weather.make_image(lat, lon)
@@ -54,7 +55,7 @@ def lambda_handler(event, context):
 
 def main():
     body = {
-        "mode": "tfl",
+        "mode": MessageMode.TFL,
         "station_id": Stations.HAMPSTEAD_HEATH.station_id,
         "inbound": True,
     }

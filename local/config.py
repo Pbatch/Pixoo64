@@ -1,7 +1,6 @@
 import json
 from dataclasses import asdict, dataclass
-from enum import IntEnum
-from typing import Literal
+from enum import IntEnum, StrEnum, auto
 
 
 class Weekday(IntEnum):
@@ -13,10 +12,15 @@ class Weekday(IntEnum):
     SATURDAY = 5
     SUNDAY = 6
 
+class MessageMode(StrEnum):
+    TFL = auto()
+    PARKRUN = auto()
+    WEATHER = auto()
+
 
 @dataclass(frozen=True, kw_only=True)
 class Message:
-    mode: Literal["tfl", "parkrun"]
+    mode: MessageMode
     weekday: Weekday | None = None
 
     def to_message_body(self):
@@ -26,20 +30,20 @@ class Message:
 
 @dataclass(frozen=True, kw_only=True)
 class TflMessage(Message):
-    mode: str = "tfl"
+    mode: MessageMode = MessageMode.TFL
     station_id: str
     inbound: bool
 
 
 @dataclass(frozen=True, kw_only=True)
 class ParkrunMessage(Message):
-    mode: str = "parkrun"
+    mode: MessageMode = MessageMode.PARKRUN
     id_to_name: dict[str, str]
 
 
 @dataclass(frozen=True, kw_only=True)
 class WeatherMessage(Message):
-    mode: str = "weather"
+    mode: MessageMode = MessageMode.WEATHER
     lat: str
     lon: str
 
