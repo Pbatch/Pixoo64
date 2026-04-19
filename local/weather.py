@@ -138,17 +138,12 @@ class Weather:
         image = Image.new("RGB", (64, 64), color=Colours.GRAY)
         self._draw_header(image)
 
-        remaining_y = 64 - (self.pen.letter_height + 6)
-        print(remaining_y)
-
-        row_1_y = self.pen.letter_height + 6 + (remaining_y // 2)
-        row_2_y = self.pen.letter_height + 6 + remaining_y
-
+        row_1_y = 35 + self.pen.letter_height // 2
         for x, y, icon, key in [
             [1, row_1_y, self.thermometer, "screenTemperature"],
             [33, row_1_y, self.duck, "pondTemperature"],
-            [1, row_2_y, self.rain, "probOfPrecipitation"],
-            [33, row_2_y, self.droplet, "screenRelativeHumidity"],
+            [1, 64, self.rain, "probOfPrecipitation"],
+            [33, 64, self.droplet, "screenRelativeHumidity"],
         ]:
             image.paste(icon, (x + (32 - icon.width) // 2, y - self.pen.letter_height - icon.height - 2), icon)
 
