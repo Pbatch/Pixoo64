@@ -75,8 +75,8 @@ class Weather:
         key = "pond_temperature.json"
         temperature, last_updated = self.cache.get(key)
         if last_updated is not None:
-            recently_checked = (self.now_timestamp - last_updated) < 43200
-            if recently_checked:
+            recently_checked = (self.now_timestamp - last_updated) < 3600
+            if recently_checked and False:
                 return temperature
 
         response = self.pool_manager.request("GET", "https://nw3weather.co.uk/wxdataday.php?vartype=pond")
@@ -84,9 +84,8 @@ class Weather:
         if response.status != 200:
             print(f"Error: {response.status}")
             print(data)
-            return 0
+            return -99
 
-        temperature = 0
         yesterday = self.now - timedelta(days=1)
         rows = data.split('<tr>')
         for row in rows:
@@ -102,12 +101,10 @@ class Weather:
             value = re.sub('<[^<]+?>', '', target_cell).replace('&nbsp;', '').strip()
             if value and value != "-":
                 temperature = round(float(value))
-                break
+                self.cache.save(temperature, key)
+                return temperature
 
-        if temperature is not None:
-            self.cache.save(temperature, key)
-
-        return temperature
+        return -99
 
     def _draw_header(self, image):
         text = "Weather"
