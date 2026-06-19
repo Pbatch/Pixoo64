@@ -7,11 +7,11 @@ from urllib.parse import urlencode
 import urllib3
 from pen import Colours, Pen
 from PIL import Image
-from s3_cache import S3Cache
+from caches import S3Cache, LocalCache
 
 
 class Weather:
-    def __init__(self, cache: S3Cache):
+    def __init__(self, cache: S3Cache | LocalCache):
         self.cache = cache
 
         self.pool_manager = urllib3.PoolManager()
@@ -158,7 +158,7 @@ class Weather:
 def main():
     from my_config import weather_message
 
-    cache = S3Cache()
+    cache = LocalCache()
     weather = Weather(cache)
     image = weather.make_image(weather_message.lat, weather_message.lon)
     image.save("../weather.png")
