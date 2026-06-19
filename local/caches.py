@@ -28,7 +28,7 @@ class S3Cache:
         )
 
 class LocalCache:
-    def __init__(self, cache_dir="pixoo64_cache"):
+    def __init__(self, cache_dir="server_cache"):
         self.cache_dir = cache_dir
         os.makedirs(self.cache_dir, exist_ok=True)
 

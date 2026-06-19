@@ -5,7 +5,7 @@ from config import MessageMode
 from weather import Weather
 from parkrun import Parkrun
 from pixoo import Pixoo
-from s3_cache import S3Cache
+from caches import S3Cache
 from tfl import ID_TO_STATION, TFL, Stations
 
 pixoo = Pixoo()

@@ -5,3 +5,4 @@ aws/cdk.out
 *.png
 !images/*.png
 local/my_config.py
+local/server_cache
