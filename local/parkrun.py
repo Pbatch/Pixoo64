@@ -5,7 +5,7 @@ from datetime import datetime
 import urllib3
 from pen import Colours, Pen
 from PIL import Image
-from s3_cache import S3Cache
+from caches import S3Cache, LocalCache
 from urllib3 import make_headers
 
 
@@ -22,7 +22,7 @@ class Runner:
 
 
 class Parkrun:
-    def __init__(self, cache: S3Cache):
+    def __init__(self, cache: S3Cache | LocalCache):
         self.cache = cache
 
         self.headers = {

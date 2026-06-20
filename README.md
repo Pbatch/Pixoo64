@@ -172,8 +172,72 @@ config = Config(
 Once this is done, 
 you're ready for deployment.
 
-### Infrastructure
+### Local Infrastructure
+This section is for hosting the code on a local server like a Raspberry Pi.
 
+#### Setup
+1) Copy the code (including your `my_config.py`) to your server.
+2) Install `uv` (https://docs.astral.sh/uv/getting-started/installation/). 
+
+I.e. On macOS and Linux
+```
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+3) Make a virtual environment 
+```
+cd Pixoo64
+uv venv --python 3.14 .venv
+```
+4) Install the Python requirements
+```
+uv sync
+```
+5) Start the server
+```
+cd local
+python server.py
+```
+
+#### Service
+If you want a persistent service,
+then on Linux you can do the following:
+ 
+1) Write `/etc/systemd/system/pixoo-server.service`
+
+I.e.
+```
+[Unit]
+Description=Pixoo64 Server Service
+After=network.target
+
+[Service]
+User=pbatch
+Group=pbatch
+WorkingDirectory=/home/pbatch/github/Pixoo64/local
+
+# Explicitly define your environment variables here
+Environment="MET_OFFICE_API_KEY=<MET_OFFICE_API_KEY>"
+Environment="PIXOO_URL=<PIXOO_URL>"
+Environment="PROXY_URL=<PROXY_URL>"
+Environment="TFL_APP_KEY=<TFL_APP_KEY>"
+Environment="TZ=Europe/London"
+
+ExecStart=/home/pbatch/.local/bin/uv run python server.py
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+2) Start the service
+```
+sudo systemctl daemon-reload
+sudo systemctl restart pixoo-server
+```
+
+### Cloud Infrastructure
 If you don't want to host your own infrastructure,
 message me with your `my_config.py` file,
 and I can host everything for you.
