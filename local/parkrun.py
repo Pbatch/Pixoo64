@@ -44,19 +44,13 @@ class Parkrun:
 
     @staticmethod
     def _get_pool_manager():
-        if os.environ.get("LAMBDA_ENV") is None:
-            return urllib3.PoolManager()
-
-        url = os.environ.get("PROXY_URL")
-        if url is None:
-            raise ValueError(
-                "The PROXY_URL environment variable must be set when using the Parkrun class in an AWS Lambda"
-            )
-
-        scheme, proxy_info = url.split("://", 1)
-        proxy_basic_auth, host = proxy_info.split("@", 1)
-        proxy_url = f"{scheme}://{host}"
-        proxy_headers = make_headers(proxy_basic_auth=proxy_basic_auth)
+        proxy_url = None
+        proxy_headers = None
+        if (url := os.environ.get("PROXY_URL")) is not None:
+            scheme, proxy_info = url.split("://", 1)
+            proxy_basic_auth, host = proxy_info.split("@", 1)
+            proxy_url = f"{scheme}://{host}"
+            proxy_headers = make_headers(proxy_basic_auth=proxy_basic_auth)
 
         return urllib3.ProxyManager(
             proxy_url=proxy_url,
@@ -205,7 +199,7 @@ class Parkrun:
 def main():
     from my_config import parkrun_message
 
-    cache = S3Cache()
+    cache = LocalCache()
     parkrun = Parkrun(cache)
     image = parkrun.make_image(parkrun_message.id_to_name)
     image.save("../parkrun.png")
