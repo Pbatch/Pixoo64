@@ -76,7 +76,7 @@ class Weather:
         temperature, last_updated = self.cache.get(key)
         if last_updated is not None:
             recently_checked = (self.now_timestamp - last_updated) < 3600
-            if recently_checked and False:
+            if recently_checked:
                 return temperature
 
         response = self.pool_manager.request("GET", "https://nw3weather.co.uk/wxdataday.php?vartype=pond")
