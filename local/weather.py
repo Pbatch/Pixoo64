@@ -84,7 +84,7 @@ class Weather:
         if response.status != 200:
             print(f"Error: {response.status}")
             print(data)
-            return -99
+            return 99
 
         yesterday = self.now - timedelta(days=1)
         rows = data.split('<tr>')
@@ -104,7 +104,7 @@ class Weather:
                 self.cache.save(temperature, key)
                 return temperature
 
-        return -99
+        return 99
 
     def _draw_header(self, image):
         text = "Weather"

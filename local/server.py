@@ -3,7 +3,8 @@ from datetime import datetime, timezone
 import json
 import time
 
-from config import MessageMode, TflMessage, ParkrunMessage, WeatherMessage
+from config import GalleryMessage, MessageMode, ParkrunMessage, TflMessage, WeatherMessage
+from gallery import Gallery
 from weather import Weather
 from parkrun import Parkrun
 from pixoo import Pixoo
@@ -47,6 +48,8 @@ def main():
                 image = parkrun.make_image(message.id_to_name)
             elif isinstance(message, WeatherMessage):
                 image = weather.make_image(message.lat, message.lon)
+            elif isinstance(message, GalleryMessage):
+                image = Gallery(message.image_directory, message.header_text).make_image()
             else:
                 raise ValueError(f'Message "{message}" is not supported')
 
