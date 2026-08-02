@@ -16,6 +16,7 @@ class MessageMode(StrEnum):
     TFL = auto()
     PARKRUN = auto()
     WEATHER = auto()
+    GALLERY = auto()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,6 +48,9 @@ class WeatherMessage(Message):
     lat: str
     lon: str
 
+@dataclass(frozen=True, kw_only=True)
+class GalleryMessage(Message):
+    mode: MessageMode = MessageMode.GALLERY
 
 @dataclass(frozen=True)
 class Config:
