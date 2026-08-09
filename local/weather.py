@@ -87,22 +87,29 @@ class Weather:
             return 99
 
         yesterday = self.now - timedelta(days=1)
-        rows = data.split('<tr>')
-        for row in rows:
-            if f'>{yesterday.day!s}</td>' not in row:
-                continue
+        row_pattern = (
+            r'<div\b[^>]*\bclass="[^"]*\bdd-row\b[^"]*"[^>]*>\s*'
+            r'<div\b[^>]*\bclass="[^"]*\bdd-day\b[^"]*"[^>]*>\s*'
+            rf"{yesterday.day}\s*</div>(.*?)</div>\s*</div>"
+        )
+        row = re.search(row_pattern, data, flags=re.DOTALL)
+        if row is None:
+            return 99
 
-            cells = row.split('</td>')
-            if len(cells) <= yesterday.month:
-                continue
+        cells = re.findall(
+            r'<div\b[^>]*\bclass="[^"]*\bdd-cell\b[^"]*"[^>]*>(.*?)</div>',
+            row.group(1),
+            flags=re.DOTALL,
+        )
+        if len(cells) < yesterday.month:
+            return 99
 
-            target_cell = cells[yesterday.month]
-
-            value = re.sub('<[^<]+?>', '', target_cell).replace('&nbsp;', '').strip()
-            if value and value != "-":
-                temperature = round(float(value))
-                self.cache.save(temperature, key)
-                return temperature
+        target_cell = cells[yesterday.month - 1]
+        value = re.sub('<[^<]+?>', '', target_cell).replace('&nbsp;', '').strip()
+        if value and value != "-":
+            temperature = round(float(value))
+            self.cache.save(temperature, key)
+            return temperature
 
         return 99
 
