@@ -8,6 +8,7 @@ from gallery import Gallery
 from weather import Weather
 from parkrun import Parkrun
 from pixoo import Pixoo
+from dimmer import Dimmer
 from caches import LocalCache
 from tfl import ID_TO_STATION, TFL, Stations
 import boto3
@@ -18,6 +19,7 @@ cache = LocalCache()
 tfl = TFL()
 parkrun = Parkrun(cache)
 weather = Weather(cache)
+dimmer = Dimmer()
 
 def _filter_messages(messages):
     filtered_messages = []
@@ -53,16 +55,7 @@ def main():
             else:
                 raise ValueError(f'Message "{message}" is not supported')
 
-            payload = {
-                "Command": "Draw/SendHttpGif",
-                "PicNum": 1,
-                "PicWidth": 64,
-                "PicOffset": 0,
-                "PicID": int(time.time()),
-                "PicSpeed": 0,
-                "PicData": pixoo.encode_image(image),
-            }
-            result = pixoo.post(payload)
+            result = pixoo.send_image(image, brightness=dimmer.get_brightness())
             print(result)
             time.sleep(60 / config.messages_per_minute)
             

@@ -41,24 +41,18 @@ so that we can call the API from the cloud.
 Once `PIXOO_URL` is set, 
 sending images is easy.
 ```python
-import time
-
 from pixoo import Pixoo
 from PIL import Image
 
 
 pixoo = Pixoo()
 image = Image.open("<IMAGE_PATH>")
-payload = {
-    "Command": "Draw/SendHttpGif",
-    "PicNum": 1,
-    "PicWidth": 64,
-    "PicOffset": 0,
-    "PicID": int(time.time()),
-    "PicSpeed": 0,
-    "PicData": pixoo.encode_image(image),
-}
-pixoo.post(payload)
+pixoo.send_image(image)
+```
+
+You can also set the brightness (0-100) in the same request.
+```python
+pixoo.send_image(image, brightness=50)
 ```
 
 In the subsequent sections,
@@ -148,6 +142,37 @@ weather_message = WeatherMessage(
 This will make a sample image called `weather.png`.
 
 <img src="images/weather.png" alt="Weather dashboard" width="50%">
+
+### Brightness
+
+The Pixoo64 dims automatically overnight,
+using the local time from the `TZ` environment variable
+(i.e. `export TZ=Europe/London`).
+
+By default, the brightness is:
+* 1 from midnight to 6am
+* 100 from 9am to 9pm
+* Stepping smoothly between them each hour
+
+Brightness 0 turns the screen fully black,
+so 1 is the lowest visible brightness.
+
+To change the schedule, 
+edit the `Dimmer()` call in `local/server.py` (local) or `local/consumer.py` (cloud). I.e.
+```python
+dimmer = Dimmer(
+    day_brightness=80,
+    night_brightness=1,
+    morning_start=7,
+    morning_end=9,
+    evening_start=22,
+    evening_end=24,
+)
+```
+
+The brightness is sent with every image,
+so if the Pixoo64 restarts,
+the correct brightness is restored with the next image.
 
 ### Messages
 

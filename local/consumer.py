@@ -1,10 +1,10 @@
 import json
-import time
 
 from config import MessageMode
 from weather import Weather
 from parkrun import Parkrun
 from pixoo import Pixoo
+from dimmer import Dimmer
 from caches import S3Cache
 from tfl import ID_TO_STATION, TFL, Stations
 
@@ -13,6 +13,7 @@ cache = S3Cache()
 tfl = TFL()
 parkrun = Parkrun(cache)
 weather = Weather(cache)
+dimmer = Dimmer()
 
 
 def lambda_handler(event, context):
@@ -39,16 +40,7 @@ def lambda_handler(event, context):
     else:
         raise ValueError(f'Mode "{mode}" is not supported')
 
-    payload = {
-        "Command": "Draw/SendHttpGif",
-        "PicNum": 1,
-        "PicWidth": 64,
-        "PicOffset": 0,
-        "PicID": int(time.time()),
-        "PicSpeed": 0,
-        "PicData": pixoo.encode_image(image),
-    }
-    result = pixoo.post(payload)
+    result = pixoo.send_image(image, brightness=dimmer.get_brightness())
 
     return result
 

@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import time
 
 import urllib3
 from PIL import Image
@@ -24,6 +25,27 @@ class Pixoo:
             pixels.extend([red, green, blue])
 
         return base64.b64encode(bytearray(pixels)).decode("utf-8")
+
+    def send_image(self, image: Image, brightness: int | None = None):
+        payload = {
+            "Command": "Draw/SendHttpGif",
+            "PicNum": 1,
+            "PicWidth": 64,
+            "PicOffset": 0,
+            "PicID": int(time.time()),
+            "PicSpeed": 0,
+            "PicData": self.encode_image(image),
+        }
+        if brightness is not None:
+            payload = {
+                "Command": "Draw/CommandList",
+                "CommandList": [
+                    {"Command": "Channel/SetBrightness", "Brightness": brightness},
+                    payload,
+                ],
+            }
+
+        return self.post(payload)
 
     def post(self, payload):
         encoded_payload = json.dumps(payload).encode("utf-8")
