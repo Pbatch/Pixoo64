@@ -74,9 +74,14 @@ class Parkrun:
 
     def _get_html(self, id_):
         url = f"https://www.parkrun.org.uk/parkrunner/{id_}"
-        response = self.pool_manager.request(
-            method="GET", url=url, headers=self.headers
-        )
+        try:
+            response = self.pool_manager.request(
+                method="GET", url=url, headers=self.headers
+            )
+        except urllib3.exceptions.HTTPError as e:
+            print(f"Parkrun request failed: {e}")
+            return None
+
         if response.status != 200:
             print(f"Parkrun API error: {response.status}")
             return None
@@ -114,7 +119,7 @@ class Parkrun:
             if recently_checked or not_saturday:
                 return stats
 
-        update = False
+        attempted = False
         for id_ in ids:
             cached_stats = stats.get(id_)
 
@@ -123,15 +128,21 @@ class Parkrun:
                 if correct_date:
                     continue
 
+            attempted = True
             html = self._get_html(id_)
             if html is None:
                 print(f'Failed to get HTML for "{id_}"')
                 continue
 
-            stats[id_] = self._parse_html(html)
-            update = True
+            try:
+                stats[id_] = self._parse_html(html)
+            except ValueError as e:
+                print(f'Failed to parse HTML for "{id_}": {e}')
 
-        if update:
+        # Save even if every fetch failed: the cache's last-updated time is
+        # what throttles retries, so skipping the save means retrying on
+        # every message cycle.
+        if attempted:
             self.cache.save(stats, key)
 
         return stats
